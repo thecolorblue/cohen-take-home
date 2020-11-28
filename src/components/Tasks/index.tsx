@@ -1,12 +1,13 @@
 import { Breadcrumb, Card, Checkbox, DatePicker, List, Select, Space, Tooltip } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link } from 'react-router-dom';
 import { Form, Input, Button } from 'antd';
 import { CloseCircleOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import { taskSelector, taskFormStateSelector, Task, taskEditSelector, allTaskSelector, todoSelector } from '../../reducer/selectors';
-import { toggleTaskForm, createTask, updateTask, removeTask } from '../../reducer/actions';
+import { toggleTaskForm } from '../../reducer/actions';
+import { asyncCreateTask, asyncUpdateTask, asyncRemoveTask, getTasks } from '../../reducer/async';
 
 const layout = {
   labelCol: { span: 8 },
@@ -43,13 +44,13 @@ export default function Tasks() {
             onChange={onChange}
           ></Checkbox>
         </div>
-        <Button icon={<DeleteOutlined />} onClick={()=>dispatch(removeTask(id))}></Button>
+        <Button icon={<DeleteOutlined />} onClick={()=>dispatch(asyncRemoveTask(id))}></Button>
       </div>
     </List.Item>
   );
 
   const toggleTaskStatus = (task: Task) => {
-    dispatch(updateTask(task.id,
+    dispatch(asyncUpdateTask(task.id,
       task.status === 'pending' ? 'done': 'pending'
     ));
 
@@ -60,9 +61,9 @@ export default function Tasks() {
 
   const complete = (task: Task) => {
     if (editTask && editTask.id !== undefined) {
-      dispatch(updateTask(editTask.id, task.status, task.description, task.due, task.priority));
+      dispatch(asyncUpdateTask(editTask.id, task.status, task.description, task.due, task.priority));
     } else {
-      dispatch(createTask({
+      dispatch(asyncCreateTask({
         ...task,
         todo_id: id
       }));
@@ -85,6 +86,10 @@ export default function Tasks() {
       return Promise.resolve();
     }
   }
+
+  useEffect(()=> {
+    dispatch(getTasks());
+  }, [dispatch, id]);
 
   return (
     <Space direction="vertical">

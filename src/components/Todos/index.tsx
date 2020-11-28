@@ -1,11 +1,12 @@
 import { Breadcrumb, Button, Card, Form, Input, List, Progress, Space, Tooltip } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import { CloseCircleOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import { Todo, todoEditSelector, todoFormStateSelector, todoSelector } from '../../reducer/selectors';
-import { createTodo, removeTodo, toggleTodoForm, updateTodo } from "../../reducer/actions";
+import { toggleTodoForm } from '../../reducer/actions';
+import { asyncCreateTodo, asyncRemoveTodo, asyncUpdateTodo, getTodos } from '../../reducer/async';
 
 export default function Todos() {
   // We can use the `useParams` hook here to access
@@ -17,9 +18,9 @@ export default function Todos() {
 
   const complete = (todo: Todo) => {
     if (editTodo && editTodo.id !== undefined) {
-      dispatch(updateTodo(editTodo.id, todo.title));
+      dispatch(asyncUpdateTodo(editTodo.id, todo.title));
     } else {
-      dispatch(createTodo({
+      dispatch(asyncCreateTodo({
         ...todo
       }));  
     }
@@ -38,6 +39,10 @@ export default function Todos() {
       return Promise.resolve();
     }
   }
+
+  useEffect(()=> {
+    dispatch(getTodos());
+  }, [dispatch, todos.length]);
 
   return (
     <Space direction="vertical">
@@ -60,7 +65,7 @@ export default function Todos() {
                 {!!progress && <Progress percent={Math.round(progress)} />}
                 {!progress && <Progress percent={0} />}
               </Link>
-              <Button icon={<DeleteOutlined />} onClick={()=>dispatch(removeTodo(id))}></Button>
+              <Button icon={<DeleteOutlined />} onClick={()=>dispatch(asyncRemoveTodo(id))}></Button>
             </div>
           </List.Item>
         )}
